@@ -42,8 +42,8 @@ func NewLogger(level string) Logger {
 		panic(err)
 	}
 
-	Logger.log = log.Sugar()
-	Logger.log.Info("Logging Service has Started....")
+	//Logger.Log = log.Sugar()
+	//Logger.Log.Info("Logging Service has Started....")
 
 	return Logger{
 		log: log.Sugar(),
@@ -87,18 +87,18 @@ func (L *Logger) GetLevel() (string, error) {
 func (L *Logger) SetLogLevel(g *gin.Context) {
 	level := g.Param("level")
 
-	L.log.Infof("Setting log level to %s", level)
+	L.Log.Infof("Setting log level to %s", level)
 	err := SetLevel(level)
 	if err != nil {
 		g.JSON(http.StatusBadRequest, err.Error())
 	}
 
-	L.log.Infof("Log level set to %s", level)
+	L.Log.Infof("Log level set to %s", level)
 	g.JSON(http.StatusOK, "ok")
 }
 
 func (L *Logger) GetLogLevel(g *gin.Context) {
-	L.Infof("Getting log level.....")
+	L.Log.Infof("Getting log level.....")
 	level, err := GetLevel()
 	if err != nil {
 		g.JSON(http.StatusBadRequest, err.Error())
