@@ -24,7 +24,7 @@ func NewLogger(level string) Logger {
 	// Set the initial logging level (Starting up with Info)
 	atom = zap.NewAtomicLevelAt(zapcore.InfoLevel)
 
-	err := SetLevel(level)
+	err := StartLevel(level)
 	if err != nil {
 		fmt.Errorf("Error setting logging level, going with default Info level")
 	}
@@ -46,8 +46,27 @@ func NewLogger(level string) Logger {
 	//Logger.Log.Info("Logging Service has Started....")
 
 	return Logger{
-		log: log.Sugar(),
+		Log: log.Sugar(),
 	}
+
+}
+
+// StartLevel allows for setting the log level on the fly
+func StartLevel(level string) error {
+	switch level {
+	case "debug":
+		atom.SetLevel(zapcore.DebugLevel)
+	case "info":
+		atom.SetLevel(zapcore.InfoLevel)
+	case "warn":
+		atom.SetLevel(zapcore.WarnLevel)
+	case "error":
+		atom.SetLevel(zapcore.ErrorLevel)
+	default:
+		return errors.New("Invalid Level")
+	}
+
+	return nil
 
 }
 
@@ -71,13 +90,12 @@ func (L *Logger) SetLevel(level string) error {
 }
 
 // GetLevel allows for getting the current logging level
-// Do we want to catch an error here and return it???????
-// If not, let's not add an error return
 func (L *Logger) GetLevel() (string, error) {
 
-	getlvl, err := atom.Level().String()
-	if err != nil {
-		fmt.Errorf("Error Getting Logging Level: %v", err.Error())
+	getlvl := atom.Level().String()
+	// use strconv to see if string is empty on return
+	if len(getlvl) == 0 {
+		return "", fmt.Errorf("Error Getting Logging Level, returned empty")
 	}
 
 	return getlvl, nil
@@ -87,24 +105,24 @@ func (L *Logger) GetLevel() (string, error) {
 func (L *Logger) SetLogLevel(g *gin.Context) {
 	level := g.Param("level")
 
-	L.Log.Infof("Setting log level to %s", level)
-	err := SetLevel(level)
+	fmt.Printf("Setting log level to %s\n", level)
+	err := L.SetLevel(level)
 	if err != nil {
 		g.JSON(http.StatusBadRequest, err.Error())
 	}
 
-	L.Log.Infof("Log level set to %s", level)
+	fmt.Printf("Log level set to %s\n", level)
 	g.JSON(http.StatusOK, "ok")
 }
 
 func (L *Logger) GetLogLevel(g *gin.Context) {
-	L.Log.Infof("Getting log level.....")
-	level, err := GetLevel()
+	fmt.Printf("Getting log level.....\n")
+	level, err := L.GetLevel()
 	if err != nil {
 		g.JSON(http.StatusBadRequest, err.Error())
 	}
 
-	L.Log.Infof("Log level is %s", level)
+	fmt.Printf("Log level is %s\n", level)
 
 	m := make(map[string]string)
 	m["log-level"] = level
